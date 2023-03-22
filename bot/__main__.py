@@ -145,7 +145,7 @@ NOTE: Try each command without any perfix to see more detalis.<br><br>
 <b>/{BotCommands.RssSettingsCommand}</b>[query]: Rss Settings (Only Owner & Sudo).<br><br>
 '''
 
-help_string = f'''
+help_string = '''
 Hei, Need Help!!
 '''
 try:
@@ -155,7 +155,6 @@ try:
     )["path"]
 except Exception as err:
     LOGGER.warning(f"{err}")
-    pass
 def bot_help(update, context):
     button = ButtonMaker()
     button.buildbutton("Click Here", f"https://graph.org/{help}")
@@ -226,6 +225,4 @@ app.start()
 main()
 if USER_SESSION_STRING:
     app_session.run()
-else:
-    pass
 main_loop.run_forever()

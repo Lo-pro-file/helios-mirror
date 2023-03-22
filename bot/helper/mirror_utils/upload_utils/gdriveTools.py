@@ -99,8 +99,7 @@ class GoogleDriveHelper:
         try:
             file_id = self.__getIdFromUrl(link)
         except (KeyError, IndexError):
-            msg = "Google Drive ID could not be found in the provided link"
-            return msg
+            return "Google Drive ID could not be found in the provided link"
         msg = ''
         try:
             self.__service.files().delete(fileId=file_id, supportsTeamDrives=IS_TEAM_DRIVE).execute()
@@ -166,8 +165,7 @@ class GoogleDriveHelper:
 
             drive_file = self.__service.files().get(supportsTeamDrives=True,
                                                     fileId=response['id']).execute()
-            download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
-            return download_url
+            return self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
         media_body = MediaFileUpload(file_path,
                                      mimetype=mime_type,
                                      resumable=True,
@@ -177,9 +175,7 @@ class GoogleDriveHelper:
         drive_file = self.__service.files().create(supportsTeamDrives=True,
                                                    body=file_metadata, media_body=media_body)
         response = None
-        while response is None:
-            if self.__is_cancelled:
-                break
+        while response is None and not self.__is_cancelled:
             try:
                 self.__status, response = drive_file.next_chunk()
             except HttpError as err:
@@ -210,8 +206,7 @@ class GoogleDriveHelper:
             self.__set_permission(response['id'])
         # Define file instance and get url for download
         drive_file = self.__service.files().get(supportsTeamDrives=True, fileId=response['id']).execute()
-        download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
-        return download_url
+        return self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
 
     def upload(self, file_name: str):
         self.__is_uploading = True
@@ -323,8 +318,7 @@ class GoogleDriveHelper:
         try:
             file_id = self.__getIdFromUrl(link)
         except (KeyError, IndexError):
-            msg = "Google Drive ID could not be found in the provided link"
-            return msg
+            return "Google Drive ID could not be found in the provided link"
         msg = ""
         LOGGER.info(f"File ID: {file_id}")
         try:
@@ -367,7 +361,7 @@ class GoogleDriveHelper:
                         urls = f'{INDEX_URL}/{url_path}?a=view'
                         buttons.buildbutton("🌐 View Link", urls)
                     if SOURCE_LINK is True:
-                        buttons.buildbutton(f"🔗 Source Link", link)
+                        buttons.buildbutton("🔗 Source Link", link)
         except Exception as err:
             if isinstance(err, RetryError):
                 LOGGER.info(f"Total Attempts: {err.last_attempt.attempt_number}")
@@ -418,7 +412,9 @@ class GoogleDriveHelper:
         file_id = file.get("id")
         if not IS_TEAM_DRIVE:
             self.__set_permission(file_id)
-        LOGGER.info("Created G-Drive Folder:\nName: {}\nID: {} ".format(file.get("name"), file_id))
+        LOGGER.info(
+            f'Created G-Drive Folder:\nName: {file.get("name")}\nID: {file_id} '
+        )
         return file_id
 
     def __upload_dir(self, input_directory, parent_id):
@@ -575,7 +571,6 @@ class GoogleDriveHelper:
         fileName = self.__escapes(str(fileName))
         contents_count = 0
         telegraph_content = []
-        path = []
         Title = False
         if len(DRIVES_IDS) > 1:
             token_service = self.__alt_authorize()
@@ -609,7 +604,7 @@ class GoogleDriveHelper:
                         msg += f' <b>| <a href="{url}">Index Link</a></b>'
                 elif mime_type == 'application/vnd.google-apps.shortcut':
                     msg += f"⁍<a href='https://drive.google.com/drive/folders/{file.get('id')}'>{file.get('name')}" \
-                        f"</a> (shortcut)"
+                            f"</a> (shortcut)"
                 else:
                     furl = f"https://drive.google.com/uc?id={file.get('id')}&export=download"
                     msg += f"📄 <code>{file.get('name')}<br>({get_readable_file_size(int(file.get('size', 0)))})</code><br>"
@@ -634,16 +629,13 @@ class GoogleDriveHelper:
         if msg != '':
             telegraph_content.append(msg)
 
-        if len(telegraph_content) == 0:
+        if not telegraph_content:
             return "", None
 
-        for content in telegraph_content:
-            path.append(
-                telegraph.create_page(
-                    title = f'{TITLE_NAME}',
-                    content=content
-                )["path"]
-            )
+        path = [
+            telegraph.create_page(title=f'{TITLE_NAME}', content=content)["path"]
+            for content in telegraph_content
+        ]
         if len(path) > 1:
             telegraph.edit_telegraph(path, telegraph_content)
 
@@ -656,8 +648,7 @@ class GoogleDriveHelper:
         try:
             file_id = self.__getIdFromUrl(link)
         except (KeyError, IndexError):
-            msg = "Google Drive ID could not be found in the provided link"
-            return msg
+            return "Google Drive ID could not be found in the provided link"
         msg = ""
         LOGGER.info(f"File ID: {file_id}")
         try:
